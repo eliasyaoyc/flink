@@ -1,4 +1,4 @@
-package org.apache.flink.hourly_tips;
+package org.apache.flink.hourlytips;
 
 /**
  * @author Elias (siran0611@gmail.com)

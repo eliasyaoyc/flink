@@ -1,9 +1,9 @@
-package org.apache.flink.rides_and_fares;
+package org.apache.flink.longridealerts;
 
 /**
  * @author Elias (siran0611@gmail.com)
  */
-public class RidesAndFares {
+public class LongRideAlerts {
     public static void main(String[] args){
       //
     }

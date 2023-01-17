@@ -1,10 +1,10 @@
-package org.apache.flink.ride_cleansing;
+package org.apache.flink.ridecleansing;
 
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.common.datatypes.TaxiRide;
 import org.apache.flink.common.sources.TaxiRideGenerator;
-import org.apache.flink.common.utils.MissingSolutionException;
+import org.apache.flink.common.utils.GeoUtils;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.PrintSinkFunction;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
@@ -40,7 +40,7 @@ public class RideCleansing {
 
         @Override
         public boolean filter(TaxiRide value) throws Exception {
-            throw new MissingSolutionException();
+            return GeoUtils.isInNYC(value.startLon,value.startLat) && GeoUtils.isInNYC(value.endLon,value.endLat);
         }
     }
 }
