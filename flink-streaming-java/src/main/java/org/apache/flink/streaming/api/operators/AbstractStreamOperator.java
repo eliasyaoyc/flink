@@ -103,12 +103,15 @@ public abstract class AbstractStreamOperator<OUT>
     // ---------------- runtime fields ------------------
 
     /** The task that contains this operator (and other operators in the same chain). */
+    // 表示当前 operator 所属的 StreamTask，最终会通过 StreamTask 中 invoke 方法执行当前 StreamTask 中所有 Operator.
     private transient StreamTask<?, ?> container;
 
     protected transient StreamConfig config;
 
     protected transient Output<StreamRecord<OUT>> output;
 
+    // 在双输入类型的算子中，如果基于事件事件处理乱序事件，会在 abstractStreamOperator 中合并输入的 watermark，
+    // 选择最小的 watermark 作为合并后的指标，并存储在 combinedWatermark 变量中.
     private transient IndexedCombinedWatermarkStatus combinedWatermark;
 
     /** The runtime context for UDFs. */
@@ -134,6 +137,10 @@ public abstract class AbstractStreamOperator<OUT>
 
     private transient StreamOperatorStateHandler stateHandler;
 
+    // Flink内部时间服务，和processingTimeService相似，但支持基于事件时间的时间域处理数据，
+    // 还可以同时注册基于事件时间和处理时间的定时器，例如在窗口、CEP等高级类型的算子中，
+    // 会在ProcessFunction中通过timeServiceManager注册Timer定时器，
+    // 当事件时间或处理时间到达指定时间后执行Timer定时器，以实现复杂的函数计算。
     private transient InternalTimeServiceManager<?> timeServiceManager;
 
     // --------------- Metrics ---------------------------
@@ -144,7 +151,7 @@ public abstract class AbstractStreamOperator<OUT>
     protected transient LatencyStats latencyStats;
 
     // ---------------- time handler ------------------
-
+    // 基于ProcessingTime的时间服务，实现ProcessingTime时间域操作，例如获取当前ProcessingTime，然后创建定时器回调等。
     protected transient ProcessingTimeService processingTimeService;
 
     // ------------------------------------------------------------------------
@@ -535,6 +542,8 @@ public abstract class AbstractStreamOperator<OUT>
     // ------------------------------------------------------------------------
 
     // ------- One input stream
+    // 用于处理在 SourceOperator 中产生的 LatencyMarker 信息，在当前 Operator 中会计算事件和
+    // LatencyMarker 之间的差值，用于评估当前算子的延时程度
     public void processLatencyMarker(LatencyMarker latencyMarker) throws Exception {
         reportOrForwardLatencyMarker(latencyMarker);
     }
@@ -594,6 +603,7 @@ public abstract class AbstractStreamOperator<OUT>
                 name, keyedStateBackend.getKeySerializer(), namespaceSerializer, triggerable);
     }
 
+    // 用于处理接入的 watermark 时间戳信息，并用最新的 watermark 更新当前算子内部的时钟
     public void processWatermark(Watermark mark) throws Exception {
         if (timeServiceManager != null) {
             timeServiceManager.advanceWatermark(mark);

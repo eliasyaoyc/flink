@@ -45,6 +45,9 @@ import static java.util.Objects.requireNonNull;
  * @param <OUT> The output type of the operator
  * @param <F> The type of the user function
  */
+// 当用户自定义实现 function 时，在此抽象类中提供了对这些 function 的初始化操作，也就实现了 Operator 和 Function 之间的关联
+// Operator 也是 Function 的载体，具体数据处理操作借助 Operator 中的 Function 进行.
+// StreamOperator 提供了执行 Function 的环境，包括状态数据管理和处理 Watermark，LatencyMarker 等信息
 @PublicEvolving
 public abstract class AbstractUdfStreamOperator<OUT, F extends Function>
         extends AbstractStreamOperator<OUT>
@@ -79,9 +82,11 @@ public abstract class AbstractUdfStreamOperator<OUT, F extends Function>
             StreamConfig config,
             Output<StreamRecord<OUT>> output) {
         super.setup(containingTask, config, output);
+        // 为 userFunction 设定 RuntimeContext 变量
         FunctionUtils.setFunctionRuntimeContext(userFunction, getRuntimeContext());
     }
 
+    // 对 userFunction 中的状态进行快照操作
     @Override
     public void snapshotState(StateSnapshotContext context) throws Exception {
         super.snapshotState(context);
@@ -92,12 +97,14 @@ public abstract class AbstractUdfStreamOperator<OUT, F extends Function>
     @Override
     public void initializeState(StateInitializationContext context) throws Exception {
         super.initializeState(context);
+        // 初始化 userFunction 的状态值
         StreamingFunctionUtils.restoreFunctionState(context, userFunction);
     }
 
     @Override
     public void open() throws Exception {
         super.open();
+        // 当用户自定义并实现了 RichFunction 时，此方法会调用 RichFunction.open 方法，完成用户自定义状态的创建和初始化
         FunctionUtils.openFunction(userFunction, new Configuration());
     }
 

@@ -30,6 +30,9 @@ import java.io.Serializable;
  *
  * @param <OUT> The output type of the operator
  */
+// StreamOperator 最终会通过 StreamOperatorFactory 封装在 Transformation 结构体中，
+// 并存储在 StreamGraph 和 JobGraph 结构中，直到运行时执行 StreamTask 时，
+// 才会调用 StreamOperatorFactory.createStreamOperator() 方法
 @PublicEvolving
 public interface StreamOperatorFactory<OUT> extends Serializable {
 

@@ -38,6 +38,9 @@ public class SimpleOperatorFactory<OUT> extends AbstractStreamOperatorFactory<OU
     private final StreamOperator<OUT> operator;
 
     /** Create a SimpleOperatorFactory from existed StreamOperator. */
+    // 基于StreamOperator提供的of()方法对算子进行工厂类的封装，实现将Operator封装在OperatorFactory中。
+    // 然后根据Operator类型的不同，创建不同的SimpleOperatorFactory实现类，例如当Operator类型为StreamSource
+    // 且UserFunction定义属于InputFormatSourceFunction时，就会创建SimpleInputFormatOperatorFactory实现类
     @SuppressWarnings("unchecked")
     public static <OUT> SimpleOperatorFactory<OUT> of(StreamOperator<OUT> operator) {
         if (operator == null) {
@@ -72,6 +75,8 @@ public class SimpleOperatorFactory<OUT> extends AbstractStreamOperatorFactory<OU
         return operator;
     }
 
+    // 在集群中执行该算子时，首先会调用SimpleOperatorFactory.createStreamOperator()方法创建StreamOperator实例。
+    // 如果算子同时实现了SetupableStreamOperator接口，则会调用setup()方法对算子进行基本的设置。
     @SuppressWarnings("unchecked")
     @Override
     public <T extends StreamOperator<OUT>> T createStreamOperator(

@@ -28,6 +28,7 @@ public class StreamFilter<IN> extends AbstractUdfStreamOperator<IN, FilterFuncti
 
     private static final long serialVersionUID = 1L;
 
+    // 初始化 FilterFunction 并设定 ChainingStrategy.ALWAYS.
     public StreamFilter(FilterFunction<IN> filterFunction) {
         super(filterFunction);
         chainingStrategy = ChainingStrategy.ALWAYS;
@@ -35,6 +36,7 @@ public class StreamFilter<IN> extends AbstractUdfStreamOperator<IN, FilterFuncti
 
     @Override
     public void processElement(StreamRecord<IN> element) throws Exception {
+        // 执行 userFunction.filter() 方法
         if (userFunction.filter(element.getValue())) {
             output.collect(element);
         }

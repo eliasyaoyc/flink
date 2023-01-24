@@ -1191,8 +1191,11 @@ public class DataStream<T> {
             StreamOperatorFactory<R> operatorFactory) {
 
         // read the output type of the input Transform to coax out errors about MissingTypeInfo
+        // 1. 从上一次转换过程中获取 TypeInformation 信息，确定没有出错，以确保下游算子转换不会出现问题
         transformation.getOutputType();
 
+        // 2. 基于operatorName、outTypeInfo和operatorFactory等参数创建OneInputTransformation实例，
+        //    注意OneInputTransformation也会包含当前DataStream对应的上一次转换操作
         OneInputTransformation<T, R> resultTransform =
                 new OneInputTransformation<>(
                         this.transformation,
@@ -1202,11 +1205,18 @@ public class DataStream<T> {
                         environment.getParallelism());
 
         @SuppressWarnings({"unchecked", "rawtypes"})
+        // 3. 基于OneInputTransformation实例创建SingleOutputStreamOperator。SingleOutputStreamOperator继承了DataStream类，
+        //    属于特殊的DataStream，主要用于每次转换操作后返回给用户继续操作的数据结构。SingleOutputStreamOperator额外提供了returns()、
+        //    disableChaining()等方法供用户使用
         SingleOutputStreamOperator<R> returnStream =
                 new SingleOutputStreamOperator(environment, resultTransform);
 
+        // 4. 调用getExecutionEnvironment().addOperator(resultTransform)方法，将创建好的OneInputTransformation
+        //    添加到StreamExecutionEnvironment的Transformation集合中，用于生成StreamGraph对象。
         getExecutionEnvironment().addOperator(resultTransform);
 
+        // 5. 将returnStream返回给用户，继续执行后续的转换操作。基于这样连续的转换操作，
+        //    将所有DataStream之间的转换按顺序存储在StreamExecutionEnvironment中。
         return returnStream;
     }
 
